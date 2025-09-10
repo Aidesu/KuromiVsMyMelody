@@ -1,10 +1,58 @@
 import { useState } from "react";
 import "./App.css";
 
-export default function Board() {
-    const [xNext, setXNext] = useState(true);
-    const [squares, setSquares] = useState(Array(9).fill(null));
+export default function Game() {
+    const [history, setHistory] = useState([Array(9).fill(null)]);
+    const [currentMove, setCurrentMove] = useState(0);
+    const xNext = currentMove % 2 === 0;
+    const currentSquares = history[currentMove];
 
+    function handlePlay(nextSquares) {
+        const nextHistory = [
+            ...history.splice(0, currentMove + 1),
+            nextSquares,
+        ];
+        setHistory(nextHistory);
+        setCurrentMove(nextHistory.length - 1);
+        setXNext(!xNext);
+    }
+
+    function jumpTo(nextMove) {
+        setCurrentMove(nextMove);
+        setXNext(nextMove % 2 === 0);
+    }
+
+    const moves = history.map((squares, move) => {
+        let description;
+        if (move > 0) {
+            description = "Aler au coup #" + move;
+        } else {
+            description = "revenir au debut";
+        }
+        return (
+            <li key={move}>
+                <button onClick={() => jumpTo(move)}>{description}</button>
+            </li>
+        );
+    });
+
+    return (
+        <main>
+            <section>
+                <Board
+                    xNext={xNext}
+                    squares={currentSquares}
+                    onPlay={handlePlay}
+                />
+            </section>
+            <div>
+                <ul>{moves}</ul>
+            </div>
+        </main>
+    );
+}
+
+function Board({ xNext, squares, onPlay }) {
     function click(i) {
         if (squares[i] || whoWin(squares)) {
             return;
@@ -15,8 +63,7 @@ export default function Board() {
                   "https://i.pinimg.com/originals/ab/fa/b8/abfab813a0ee7879ce701b83b9371cac.png")
             : (nextSquares[i] =
                   "https://i.pinimg.com/originals/25/65/45/256545d24813007fa2eb79e0dd60d56b.png");
-        setSquares(nextSquares);
-        setXNext(!xNext);
+        onPlay(nextSquares);
     }
 
     const winner = whoWin(squares);
